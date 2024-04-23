@@ -138,6 +138,23 @@ def calcular_e_r_grafico(r,e): # hago que los espesores y las resistividades ver
   resistividades[-2]=r[-1]
   resistividades[-1]=r[-1]
   return profundidades,resistividades
+ 
+def busco_minimo(r,e,rhoi,absisas):
+  print('Aplicando HILL CLIMBING. Cancelar el programa si dura mas de 3 min y ajustar manualmente.')
+  k=0
+  while k<1000:
+    ajusto_r=[]
+    for i in r:
+      ajusto_r.append(np.random.choice([i-i/500,i+i/500])) 
+    ajusto_r=np.array(ajusto_r)
+    res_ap2=calculo_res_apa(absisas,ajusto_r,e)
+    res_ap1=calculo_res_apa(absisas,r,e)
+    if calculo_rms(rhoi,res_ap2)<calculo_rms(rhoi,res_ap1):
+      r=ajusto_r
+      k=0
+    else:
+      k=k+1
+  return r
   
     
 ################################
@@ -177,12 +194,18 @@ titulo='Busco las capas equivalentes'
 print(titulo,'y calculo la resistividad aparente. Probablemente se desajuste nuevamente la resistividad aparente observada y calculada.')
 graficar(absisas,rho_ap,calculo_res_apa(absisas,r,e),r,e,titulo)
 
-#Ajusto manualmente hasta obtener un RMS bajo.
-ajuste_r=np.zeros(len(r))
-ajuste_e=np.zeros(len(e))#este vector debe tener la misma longitud la cantidad de espesores equivalentes sin contar el semiespacio.
-ajuste_r=np.array([-0.21,2.5,0,0.5])#este vector debe tener la misma longitud la cantidad de resistividades equivalentes.
-#r[0]=7.65 # puedo asignarle una nueva resistividad
-r,e=ajuste_manual(r,ajuste_r,e,ajuste_e)
+#Como se desajusta al buscar capas equivalentes:
+#Ajusto manualmente hasta obtener un RMS bajo o puedo buscar las resistividades verdaderas mediante la funcion 'busco_minimo' mediante HILL CLIMBING.
+#Si este ultimo metodo no converge hay que comentar la funcion que lo hace, y descomento las demas de esta seccion para ajustar manualmente
+print('Se ajusta el modelo')
+r=busco_minimo(r,e,rho_ap,absisas)#tarda un poquito en buscar, dejarlo correr como maximo 3 minutos, si no ajustar manualmente
+
+#Ajuste manual
+#ajuste_r=np.zeros(len(r))
+#ajuste_e=np.zeros(len(e))#este vector debe tener la misma longitud la cantidad de espesores equivalentes sin contar el semiespacio.
+#ajuste_r=np.array([-0.21,2.5,0,0.5])#este vector debe tener la misma longitud la cantidad de resistividades equivalentes.
+##r[0]=7.65 # puedo asignarle una nueva resistividad
+#r,e=ajuste_manual(r,ajuste_r,e,ajuste_e)
 
 titulo='Resistividad aparente observada y calculada a partir del modelo'
 print(titulo,'luego de aplicar un ajuste manual' )
